@@ -1,0 +1,15 @@
+﻿@page "{id:int}"
+@model EavWebApp.Pages.Tables.EditModel
+
+<h1>Редактировать таблицу</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Table.Id" />
+    <div class="form-group">
+        <label>Название</label>
+        <input asp-for="Table.Name" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+
+<p><a asp-page="Index">Назад к списку таблиц</a></p>

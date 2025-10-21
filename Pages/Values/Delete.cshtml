@@ -1,0 +1,15 @@
+﻿@page "{id:int}"
+@model EavWebApp.Pages.Values.DeleteModel
+@{
+    ViewData["Title"] = "Удалить значение";
+}
+
+<h1>Удалить значение</h1>
+
+<p>Вы уверены, что хотите удалить значение <strong>@Model.Value</strong>?</p>
+
+<form method="post">
+    <input type="hidden" asp-for="Value.Id" />
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a asp-page="Index" class="btn btn-secondary">Отмена</a>
+</form>

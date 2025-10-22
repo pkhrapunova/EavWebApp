@@ -1,0 +1,134 @@
+﻿@page "{id:int}"
+@model EavWebApp.Pages.Tables.TableEditModel
+@{
+    ViewData["Title"] = "Редактировать таблицу";
+}
+
+<h1>@Model.Table.Name</h1>
+
+<p>
+    <a class="btn btn-secondary" asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">
+        Добавить / Изменить поля
+    </a>
+    <a class="btn btn-secondary" asp-page="/Tables/Index">Назад к таблицам</a>
+</p>
+
+@if (Model.Fields.Any())
+{
+    <h2>Добавить запись</h2>
+
+    <form method="post" asp-page-handler="AddValues" asp-route-id="@Model.Table.Id" id="addForm">
+        <div class="row">
+            @for (int i = 0; i < Model.Fields.Count; i++)
+            {
+                var field = Model.Fields[i];
+                <div class="col-md-3 mb-2">
+                    <label>@field.Name</label>
+
+                    @if (field.FieldType == "key" && Model.KeyOptions.ContainsKey(field.Id))
+                    {
+                        <select name="myParams[@i]" class="form-control key-field" data-field-id="@field.Id" required>
+                            <option value="">Выберите...</option>
+                            @foreach (var option in Model.KeyOptions[field.Id])
+                            {
+                                <option value="@option.Key">@option.Value</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input type="text" name="myParams[@i]" class="form-control" required />
+                    }
+
+                    <input type="hidden" name="myIds[@i]" value="@field.Id" />
+                </div>
+            }
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Добавить</button>
+    </form>
+
+    <h2 class="mt-4">Существующие записи</h2>
+
+    @if (Model.ValuesByObjectId.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    @foreach (var field in Model.Fields)
+                    {
+                        <th>@field.Name</th>
+                    }
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.ValuesByObjectId)
+                {
+                    <tr>
+                        @foreach (var field in Model.Fields)
+                        {
+                            var val = obj.Value.FirstOrDefault(v => v.FieldId == field.Id)?.Val ?? "";
+
+                            @if (field.FieldType == "key" && !string.IsNullOrEmpty(val) && int.TryParse(val, out int keyId))
+                            {
+                                <td>
+                                    @if (Model.KeyReferences.ContainsKey(field.Id) && Model.KeyReferences[field.Id].ContainsKey(keyId))
+                                    {
+                                        @Model.KeyReferences[field.Id][keyId]
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">ID @keyId</span>
+                                    }
+                                </td>
+                            }
+                            else
+                            {
+                                <td>@val</td>
+                            }
+                        }
+                        <td>
+                            <a class="btn btn-sm btn-secondary"
+                               asp-page="/Values/ValueEdit"
+                               asp-route-tableId="@Model.Table.Id"
+                               asp-route-objectId="@obj.Key">
+                                Редактировать
+                            </a>
+                            <a class="btn btn-sm btn-danger"
+                               asp-page="/Values/ValueDelete"
+                               asp-route-tableId="@Model.Table.Id"
+                               asp-route-objectId="@obj.Key"
+                               onclick="return confirm('Удалить эту запись?')">
+                                Удалить
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Записей пока нет.</p>
+    }
+}
+else
+{
+    <p>
+        В таблице пока нет полей.
+        <a asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">Создать поля</a>.
+    </p>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.key-field').forEach(select => {
+            select.addEventListener('change', function() {
+                updateKeyFieldOptions();
+            });
+        });
+
+        function updateKeyFieldOptions() {
+        }
+    </script>
+}

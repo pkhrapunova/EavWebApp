@@ -1,0 +1,224 @@
+﻿@page "{tableId:int}/{id:int?}"
+@model EavWebApp.Pages.Fields.FieldEditModel
+@{
+    ViewData["Title"] = "Редактировать поля таблицы";
+}
+
+<h1>Поля таблицы: @Model.Table.Name</h1>
+
+<p>
+    <a asp-page="/Tables/TableEdit" asp-route-id="@Model.Table.Id" class="btn btn-secondary">Назад к таблице</a>
+</p>
+
+@if (Model.NewField.Id > 0)
+{
+    <h2>Редактировать поле</h2>
+    <form method="post" asp-page-handler="EditField">
+        <input type="hidden" asp-for="NewField.Id" />
+        <input type="hidden" id="selectedTableId" name="selectedTableId" value="" />
+        <div class="mb-2">
+            <label>Название поля</label>
+            <input type="text" asp-for="NewField.Name" class="form-control" required />
+        </div>
+        <div class="mb-2">
+            <label>Тип поля</label>
+            <select asp-for="NewField.FieldType" class="form-control" id="fieldTypeSelect">
+                <option value="string">string</option>
+                <option value="int">int</option>
+                <option value="decimal">decimal</option>
+                <option value="bool">bool</option>
+                <option value="datetime">datetime</option>
+                <option value="key">key</option>
+            </select>
+        </div>
+        <div class="mb-2" id="keySettingsSection" style="display: none;">
+            <label>Связанная таблица</label>
+            <select id="tableSelect" class="form-control">
+                <option value="">Выберите таблицу...</option>
+                @foreach (var table in Model.AllTables)
+                {
+                    <option value="@table.Id">@table.Name</option>
+                }
+            </select>
+
+            <div id="fieldSelectContainer" style="margin-top: 10px; display: none;">
+                <label>Поле для отображения</label>
+                <select asp-for="NewField.IdKey" class="form-control" id="fieldSelect">
+                    <option value="">Сначала выберите таблицу</option>
+                </select>
+                <small class="form-text text-muted">
+                    Выберите поле из связанной таблицы, значения которого будут показываться в выпадающем списке
+                </small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a asp-page="FieldEdit" asp-route-tableId="@Model.Table.Id" class="btn btn-secondary">Отмена</a>
+    </form>
+}
+else
+{
+    <h2>Добавить новое поле</h2>
+    <form method="post" asp-page-handler="AddField">
+        <input type="hidden" id="selectedTableId" name="selectedTableId" value="" />
+        <div class="mb-2">
+            <label>Название поля</label>
+            <input type="text" asp-for="NewField.Name" class="form-control" required />
+        </div>
+        <div class="mb-2">
+            <label>Тип поля</label>
+            <select asp-for="NewField.FieldType" class="form-control" id="fieldTypeSelect">
+                <option value="string">string</option>
+                <option value="int">int</option>
+                <option value="decimal">decimal</option>
+                <option value="bool">bool</option>
+                <option value="datetime">datetime</option>
+                <option value="key">key</option>
+            </select>
+        </div>
+        <div class="mb-2" id="keySettingsSection" style="display: none;">
+            <label>Связанная таблица</label>
+            <select id="tableSelect" class="form-control">
+                <option value="">Выберите таблицу...</option>
+                @foreach (var table in Model.AllTables)
+                {
+                    <option value="@table.Id">@table.Name</option>
+                }
+            </select>
+
+            <div id="fieldSelectContainer" style="margin-top: 10px; display: none;">
+                <label>Поле для отображения</label>
+                <select asp-for="NewField.IdKey" class="form-control" id="fieldSelect">
+                    <option value="">Сначала выберите таблицу</option>
+                </select>
+                <small class="form-text text-muted">
+                    Выберите поле из связанной таблицы, значения которого будут показываться в выпадающем списке
+                </small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить поле</button>
+    </form>
+}
+
+<hr />
+
+<h2>Существующие поля</h2>
+@if (Model.Fields != null && Model.Fields.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Тип</th>
+                <th>Связь</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var field in Model.Fields)
+            {
+                <tr>
+                    <td>@field.Name</td>
+                    <td>@field.FieldType</td>
+                    <td>
+                        @if (field.FieldType == "key" && field.IdKey.HasValue)
+                        {
+                            var relatedTable = Model.AllTables.FirstOrDefault(t => t.Fields.Any(f => f.Id == field.IdKey));
+                            var displayField = relatedTable?.Fields.FirstOrDefault(f => f.Id == field.IdKey);
+                            if (relatedTable != null && displayField != null)
+                            {
+                                <text>@relatedTable.Name → @displayField.Name</text>
+                            }
+                            else
+                            {
+                                @field.IdKey
+                            }
+                        }
+                        else
+                        {
+                            <text>-</text>
+                        }
+                    </td>
+                    <td>
+                        <a asp-page="FieldEdit" asp-route-tableId="@Model.Table.Id" asp-route-id="@field.Id" class="btn btn-sm btn-secondary">Изменить</a>
+                        <a asp-page-handler="DeleteField" asp-route-id="@field.Id" class="btn btn-sm btn-danger" onclick="return confirm('Удалить поле?')">Удалить</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Поля отсутствуют.</p>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('fieldTypeSelect').addEventListener('change', function() {
+            var keySection = document.getElementById('keySettingsSection');
+            var tableSelect = document.getElementById('tableSelect');
+            var fieldSelect = document.getElementById('fieldSelect');
+
+            if (this.value === 'key') {
+                keySection.style.display = 'block';
+                tableSelect.removeAttribute('required');
+                fieldSelect.removeAttribute('required');
+            } else {
+                keySection.style.display = 'none';
+                tableSelect.value = '';
+                fieldSelect.value = '';
+                document.getElementById('fieldSelectContainer').style.display = 'none';
+                document.getElementById('fieldSelect').innerHTML = '<option value="">Сначала выберите таблицу</option>';
+                tableSelect.removeAttribute('required');
+                fieldSelect.removeAttribute('required');
+            }
+        });
+
+        document.getElementById('tableSelect').addEventListener('change', function() {
+            var tableId = this.value;
+            var fieldSelect = document.getElementById('fieldSelect');
+            var fieldSelectContainer = document.getElementById('fieldSelectContainer');
+
+            if (tableId) {
+                fieldSelect.setAttribute('required', 'required');
+                fieldSelect.innerHTML = '<option value="">Загрузка полей...</option>';
+                fieldSelectContainer.style.display = 'block';
+
+                fetch(`?handler=TableFields&tableId=${tableId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ошибка загрузки');
+                        }
+                        return response.json();
+                    })
+                    .then(fields => {
+                        fieldSelect.innerHTML = '<option value="">Выберите поле...</option>';
+                        if (fields && fields.length > 0) {
+                            fields.forEach(field => {
+                                fieldSelect.innerHTML += `<option value="${field.id}">${field.name}</option>`;
+                            });
+                        } else {
+                            fieldSelect.innerHTML = '<option value="">Нет полей в таблице</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка загрузки полей:', error);
+                        fieldSelect.innerHTML = '<option value="">Ошибка загрузки полей</option>';
+                    });
+            } else {
+                fieldSelectContainer.style.display = 'none';
+                fieldSelect.innerHTML = '<option value="">Сначала выберите таблицу</option>';
+                fieldSelect.removeAttribute('required');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var fieldTypeSelect = document.getElementById('fieldTypeSelect');
+            if (fieldTypeSelect.value === 'key') {
+                document.getElementById('keySettingsSection').style.display = 'block';
+                document.getElementById('tableSelect').removeAttribute('required');
+                document.getElementById('fieldSelect').removeAttribute('required');
+            }
+        });
+    </script>
+}

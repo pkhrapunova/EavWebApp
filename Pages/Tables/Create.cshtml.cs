@@ -1,20 +1,23 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Threading.Tasks;
 using EavWebApp.Data;
 using EavWebApp.Models;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EavWebApp.Pages.Tables
 {
 	public class CreateModel : PageModel
 	{
 		private readonly ApplicationDbContext _context;
-		public CreateModel(ApplicationDbContext context) => _context = context;
+
+		public CreateModel(ApplicationDbContext context)
+		{
+			_context = context;
+		}
 
 		[BindProperty]
 		public EVATable Table { get; set; } = new();
-
-		public void OnGet() { }
 
 		public async Task<IActionResult> OnPostAsync()
 		{
@@ -22,6 +25,7 @@ namespace EavWebApp.Pages.Tables
 
 			_context.Tables.Add(Table);
 			await _context.SaveChangesAsync();
+
 			return RedirectToPage("Index");
 		}
 	}

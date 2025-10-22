@@ -1,13 +1,17 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EavWebApp.Models
 {
+	[Table("FieldValue")]
 	public class EVAValue
 	{
+		[Key]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }
 
 		[Column("value")]
+		[MaxLength(500)]
 		public string? Val { get; set; }
 
 		[Column("object_id")]
@@ -18,23 +22,11 @@ namespace EavWebApp.Models
 
 		[Column("record_type_id")]
 		public int TableId { get; set; }
-		public Field? Field { get; set; }
-		public EVATable? Table { get; set; }
 
-		// Вспомогательные методы
-		public static IQueryable<EVAValue> GetAllByObjectId(IQueryable<EVAValue> query, int objectId)
-		{
-			return query.Where(v => v.ObjectId == objectId);
-		}
+		[ForeignKey("FieldId")]
+		public virtual Field? Field { get; set; }
 
-		public static IQueryable<EVAValue> GetAllByFieldId(IQueryable<EVAValue> query, int fieldId)
-		{
-			return query.Where(v => v.FieldId == fieldId);
-		}
-
-		public static IQueryable<EVAValue> GetAllByTableId(IQueryable<EVAValue> query, int tableId)
-		{
-			return query.Where(v => v.TableId == tableId);
-		}
+		[ForeignKey("TableId")]
+		public virtual EVATable? Table { get; set; }
 	}
 }

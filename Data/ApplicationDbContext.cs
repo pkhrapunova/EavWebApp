@@ -1,7 +1,5 @@
 ﻿using EavWebApp.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
 
 namespace EavWebApp.Data
 {
@@ -16,11 +14,11 @@ namespace EavWebApp.Data
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			base.OnModelCreating(modelBuilder);
+
 			modelBuilder.Entity<EVATable>().ToTable("RecordType");
 			modelBuilder.Entity<Field>().ToTable("RecordField");
 			modelBuilder.Entity<EVAValue>().ToTable("FieldValue");
-
-			base.OnModelCreating(modelBuilder);
 		}
 	}
 }

@@ -1,19 +1,17 @@
 ﻿@page
 @model EavWebApp.Pages.Tables.CreateModel
-
 @{
     ViewData["Title"] = "Создать таблицу";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1>Создать таблицу</h1>
 
 <form method="post">
     <div class="form-group">
-        <label>Название</label>
+        <label>Название таблицы</label>
         <input asp-for="Table.Name" class="form-control" />
-        <span asp-validation-for="Table.Name" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Создать</button>
+    <button type="submit" class="btn btn-success">Создать</button>
 </form>
 
-<p><a asp-page="Index">Назад к списку таблиц</a></p>
+<p><a asp-page="Index">Назад</a></p>

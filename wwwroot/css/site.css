@@ -1,50 +1,289 @@
-/* Общие отступы */
-.container {
-    margin-top: 30px;
+/* Общие стили для EAV системы */
+
+/* Цветовая схема */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+    --border-color: #bdc3c7;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* Стили таблицы для Index */
-.table th, .table td {
-    vertical-align: middle;
+/* Базовые стили */
+.container-fluid {
+    max-width: 1400px;
 }
 
-/* Кнопки CRUD */
+/* Карточки */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+.card-header {
+    border-bottom: 2px solid var(--light-color);
+    border-radius: 12px 12px 0 0 !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.card-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Кнопки */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 8px 16px;
+}
+
 .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
 }
 
     .btn-primary:hover {
-        background-color: #0069d9;
-        border-color: #0062cc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
     }
+
+.btn-secondary {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    box-shadow: 0 2px 5px rgba(149, 165, 166, 0.3);
+}
 
 .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background: linear-gradient(135deg, var(--danger-color), #c0392b);
+    box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
 }
 
-    .btn-danger:hover {
-        background-color: #c82333;
-        border-color: #bd2130;
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+/* Формы */
+.form-control, .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        transform: translateY(-1px);
     }
 
-/* Заголовки */
-h1, h3 {
-    margin-top: 20px;
-    margin-bottom: 20px;
+.form-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 8px;
 }
 
-/* Форма */
-.form-group label {
+.form-text {
+    color: #7f8c8d;
+    font-size: 0.875rem;
+}
+
+/* Таблицы */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+    .table thead th {
+        background: linear-gradient(135deg, var(--primary-color), #34495e);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        padding: 12px 15px;
+        vertical-align: middle;
+        border-color: var(--border-color);
+    }
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(236, 240, 241, 0.5);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Заголовки */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.display-6 {
+    font-weight: 700;
+}
+
+/* Секции */
+.header-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+    .header-section h1 {
+        color: white;
+        margin: 0;
+    }
+
+/* Иконки */
+.fas, .fab {
+    margin-right: 8px;
+}
+
+/* Уведомления и статусы */
+.alert {
+    border: none;
+    border-radius: 10px;
+    padding: 15px 20px;
+    box-shadow: var(--shadow);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    color: white;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #00b894, #00a085);
+    color: white;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fdcb6e, #e17055);
+    color: white;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #ff7675, #d63031);
+    color: white;
+}
+
+/* Навигация */
+.navbar {
+    box-shadow: var(--shadow);
+    background: linear-gradient(135deg, var(--primary-color), #34495e);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 10px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .table-responsive {
+        border-radius: 8px;
+    }
+}
+
+/* Кастомные классы */
+.badge {
+    border-radius: 6px;
+    padding: 6px 12px;
     font-weight: 500;
 }
 
-input.form-control, select.form-control {
-    margin-bottom: 10px;
+.badge-primary {
+    background: var(--secondary-color);
 }
 
-/* Чекбоксы */
-.form-check-label {
-    margin-left: 5px;
+.badge-success {
+    background: var(--success-color);
+}
+
+.badge-warning {
+    background: var(--warning-color);
+}
+
+.badge-danger {
+    background: var(--danger-color);
+}
+
+/* Прогресс бары */
+.progress {
+    border-radius: 10px;
+    height: 8px;
+    background-color: var(--light-color);
+}
+
+.progress-bar {
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+
+/* Тени и эффекты */
+.shadow-sm {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.shadow {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
 }

@@ -4,7 +4,6 @@ using EavWebApp.Data;
 using EavWebApp.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EavWebApp.Pages.Tables
 {
@@ -21,7 +20,9 @@ namespace EavWebApp.Pages.Tables
 
 		public async Task OnGetAsync()
 		{
-			Tables = await _context.Tables.ToListAsync();
+			Tables = await _context.Tables
+								   .AsNoTracking()
+								   .ToListAsync();
 		}
 	}
 }

@@ -16,10 +16,12 @@
     <form method="post" asp-page-handler="EditField">
         <input type="hidden" asp-for="NewField.Id" />
         <input type="hidden" id="selectedTableId" name="selectedTableId" value="" />
+
         <div class="mb-2">
             <label>Название поля</label>
             <input type="text" asp-for="NewField.Name" class="form-control" required />
         </div>
+
         <div class="mb-2">
             <label>Тип поля</label>
             <select asp-for="NewField.FieldType" class="form-control" id="fieldTypeSelect">
@@ -28,9 +30,12 @@
                 <option value="decimal">decimal</option>
                 <option value="bool">bool</option>
                 <option value="datetime">datetime</option>
+                <option value="image">image</option>
                 <option value="key">key</option>
             </select>
         </div>
+
+        <!-- Настройки ключа -->
         <div class="mb-2" id="keySettingsSection" style="display: none;">
             <label>Связанная таблица</label>
             <select id="tableSelect" class="form-control">
@@ -46,12 +51,10 @@
                 <select asp-for="NewField.IdKey" class="form-control" id="fieldSelect">
                     <option value="">Сначала выберите таблицу</option>
                 </select>
-                <small class="form-text text-muted">
-                    Выберите поле из связанной таблицы, значения которого будут показываться в выпадающем списке
-                </small>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
         <a asp-page="FieldEdit" asp-route-tableId="@Model.Table.Id" class="btn btn-secondary">Отмена</a>
     </form>
 }
@@ -60,10 +63,12 @@ else
     <h2>Добавить новое поле</h2>
     <form method="post" asp-page-handler="AddField">
         <input type="hidden" id="selectedTableId" name="selectedTableId" value="" />
+
         <div class="mb-2">
             <label>Название поля</label>
             <input type="text" asp-for="NewField.Name" class="form-control" required />
         </div>
+
         <div class="mb-2">
             <label>Тип поля</label>
             <select asp-for="NewField.FieldType" class="form-control" id="fieldTypeSelect">
@@ -72,9 +77,12 @@ else
                 <option value="decimal">decimal</option>
                 <option value="bool">bool</option>
                 <option value="datetime">datetime</option>
+                <option value="image">image</option>
                 <option value="key">key</option>
             </select>
         </div>
+
+        <!-- Настройки ключа -->
         <div class="mb-2" id="keySettingsSection" style="display: none;">
             <label>Связанная таблица</label>
             <select id="tableSelect" class="form-control">
@@ -90,12 +98,10 @@ else
                 <select asp-for="NewField.IdKey" class="form-control" id="fieldSelect">
                     <option value="">Сначала выберите таблицу</option>
                 </select>
-                <small class="form-text text-muted">
-                    Выберите поле из связанной таблицы, значения которого будут показываться в выпадающем списке
-                </small>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Добавить поле</button>
+
+        <button type="submit" class="btn btn-primary">Добавить</button>
     </form>
 }
 
@@ -118,20 +124,22 @@ else
             {
                 <tr>
                     <td>@field.Name</td>
-                    <td>@field.FieldType</td>
+                    <td>
+                        @if (field.FieldType == "image")
+                        {
+                            <span>image </span>
+                        }
+                        else
+                        {
+                            @field.FieldType
+                        }
+                    </td>
                     <td>
                         @if (field.FieldType == "key" && field.IdKey.HasValue)
                         {
                             var relatedTable = Model.AllTables.FirstOrDefault(t => t.Fields.Any(f => f.Id == field.IdKey));
                             var displayField = relatedTable?.Fields.FirstOrDefault(f => f.Id == field.IdKey);
-                            if (relatedTable != null && displayField != null)
-                            {
-                                <text>@relatedTable.Name → @displayField.Name</text>
-                            }
-                            else
-                            {
-                                @field.IdKey
-                            }
+                            <text>@relatedTable?.Name → @displayField?.Name</text>
                         }
                         else
                         {
@@ -154,71 +162,37 @@ else
 
 @section Scripts {
     <script>
-        document.getElementById('fieldTypeSelect').addEventListener('change', function() {
-            var keySection = document.getElementById('keySettingsSection');
-            var tableSelect = document.getElementById('tableSelect');
-            var fieldSelect = document.getElementById('fieldSelect');
+        const typeSelect = document.getElementById('fieldTypeSelect');
+        const keySection = document.getElementById('keySettingsSection');
+        const tableSelect = document.getElementById('tableSelect');
+        const fieldSelect = document.getElementById('fieldSelect');
+        const fieldContainer = document.getElementById('fieldSelectContainer');
 
-            if (this.value === 'key') {
+        function updateVisibility() {
+            if (typeSelect.value === 'key') {
                 keySection.style.display = 'block';
-                tableSelect.removeAttribute('required');
-                fieldSelect.removeAttribute('required');
             } else {
                 keySection.style.display = 'none';
-                tableSelect.value = '';
-                fieldSelect.value = '';
-                document.getElementById('fieldSelectContainer').style.display = 'none';
-                document.getElementById('fieldSelect').innerHTML = '<option value="">Сначала выберите таблицу</option>';
-                tableSelect.removeAttribute('required');
-                fieldSelect.removeAttribute('required');
-            }
-        });
-
-        document.getElementById('tableSelect').addEventListener('change', function() {
-            var tableId = this.value;
-            var fieldSelect = document.getElementById('fieldSelect');
-            var fieldSelectContainer = document.getElementById('fieldSelectContainer');
-
-            if (tableId) {
-                fieldSelect.setAttribute('required', 'required');
-                fieldSelect.innerHTML = '<option value="">Загрузка полей...</option>';
-                fieldSelectContainer.style.display = 'block';
-
-                fetch(`?handler=TableFields&tableId=${tableId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Ошибка загрузки');
-                        }
-                        return response.json();
-                    })
-                    .then(fields => {
-                        fieldSelect.innerHTML = '<option value="">Выберите поле...</option>';
-                        if (fields && fields.length > 0) {
-                            fields.forEach(field => {
-                                fieldSelect.innerHTML += `<option value="${field.id}">${field.name}</option>`;
-                            });
-                        } else {
-                            fieldSelect.innerHTML = '<option value="">Нет полей в таблице</option>';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Ошибка загрузки полей:', error);
-                        fieldSelect.innerHTML = '<option value="">Ошибка загрузки полей</option>';
-                    });
-            } else {
-                fieldSelectContainer.style.display = 'none';
+                fieldContainer.style.display = 'none';
                 fieldSelect.innerHTML = '<option value="">Сначала выберите таблицу</option>';
-                fieldSelect.removeAttribute('required');
             }
-        });
+        }
+        typeSelect.addEventListener('change', updateVisibility);
+        document.addEventListener('DOMContentLoaded', updateVisibility);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var fieldTypeSelect = document.getElementById('fieldTypeSelect');
-            if (fieldTypeSelect.value === 'key') {
-                document.getElementById('keySettingsSection').style.display = 'block';
-                document.getElementById('tableSelect').removeAttribute('required');
-                document.getElementById('fieldSelect').removeAttribute('required');
+        tableSelect.addEventListener('change', function () {
+            const tableId = this.value;
+            if (!tableId) {
+                fieldContainer.style.display = 'none';
+                return;
             }
+            fetch(`?handler=TableFields&tableId=${tableId}`)
+                .then(r => r.json())
+                .then(fields => {
+                    fieldSelect.innerHTML = '<option value="">Выберите поле...</option>';
+                    fields.forEach(f => fieldSelect.innerHTML += `<option value="${f.id}">${f.name}</option>`);
+                    fieldContainer.style.display = 'block';
+                });
         });
     </script>
 }

@@ -1,5 +1,5 @@
 ﻿@page "{id:int}"
-@model EavWebApp.Pages.Tables.TableEditModel
+@model EavWebApp.Pages.Tables.EditModel
 @{
     ViewData["Title"] = "Редактировать таблицу";
 }
@@ -7,27 +7,23 @@
 <h1>@Model.Table.Name</h1>
 
 <p>
-    <a class="btn btn-secondary" asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">
-        Добавить / Изменить поля
-    </a>
+    <a class="btn btn-secondary" asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">Добавить / Изменить поля</a>
     <a class="btn btn-secondary" asp-page="/Tables/Index">Назад к таблицам</a>
 </p>
 
 @if (Model.Fields.Any())
 {
     <h2>Добавить запись</h2>
-
-    <form method="post" asp-page-handler="AddValues" asp-route-id="@Model.Table.Id" id="addForm">
+    <form method="post" asp-page-handler="AddValues" asp-route-id="@Model.Table.Id" enctype="multipart/form-data">
         <div class="row">
-            @for (int i = 0; i < Model.Fields.Count; i++)
+            @foreach (var field in Model.Fields)
             {
-                var field = Model.Fields[i];
                 <div class="col-md-3 mb-2">
                     <label>@field.Name</label>
 
                     @if (field.FieldType == "key" && Model.KeyOptions.ContainsKey(field.Id))
                     {
-                        <select name="myParams[@i]" class="form-control key-field" data-field-id="@field.Id" required>
+                        <select name="KeyValues[@field.Id]" class="form-control" required>
                             <option value="">Выберите...</option>
                             @foreach (var option in Model.KeyOptions[field.Id])
                             {
@@ -35,12 +31,14 @@
                             }
                         </select>
                     }
+                    else if (field.FieldType == "image")
+                    {
+                        <input type="file" name="ImageFiles[@field.Id]" accept="image/*" class="form-control" />
+                    }
                     else
                     {
-                        <input type="text" name="myParams[@i]" class="form-control" required />
+                        <input type="text" name="TextValues[@field.Id]" class="form-control" />
                     }
-
-                    <input type="hidden" name="myIds[@i]" value="@field.Id" />
                 </div>
             }
         </div>
@@ -48,7 +46,6 @@
     </form>
 
     <h2 class="mt-4">Существующие записи</h2>
-
     @if (Model.ValuesByObjectId.Any())
     {
         <table class="table table-striped">
@@ -68,39 +65,34 @@
                         @foreach (var field in Model.Fields)
                         {
                             var val = obj.Value.FirstOrDefault(v => v.FieldId == field.Id)?.Val ?? "";
-
-                            @if (field.FieldType == "key" && !string.IsNullOrEmpty(val) && int.TryParse(val, out int keyId))
-                            {
-                                <td>
-                                    @if (Model.KeyReferences.ContainsKey(field.Id) && Model.KeyReferences[field.Id].ContainsKey(keyId))
+                            <td>
+                                @if (field.FieldType == "key" && int.TryParse(val, out int keyId))
+                                {
+                                    @(Model.KeyReferences.ContainsKey(field.Id) && Model.KeyReferences[field.Id].ContainsKey(keyId)
+                                        ? Model.KeyReferences[field.Id][keyId]
+                                        : $"ID {keyId}")
+                                }
+                                else if (field.FieldType == "image")
+                                {
+                                    var bytes = obj.Value.FirstOrDefault(v => v.FieldId == field.Id)?.BinaryValue;
+                                    if (bytes != null)
                                     {
-                                        @Model.KeyReferences[field.Id][keyId]
+                                        <img src="data:image/png;base64,@Convert.ToBase64String(bytes)" style="max-height:70px; border-radius:4px;" />
                                     }
                                     else
                                     {
-                                        <span class="text-muted">ID @keyId</span>
+                                        <span class="text-muted">Нет изображения</span>
                                     }
-                                </td>
-                            }
-                            else
-                            {
-                                <td>@val</td>
-                            }
+                                }
+                                else
+                                {
+                                    @val
+                                }
+                            </td>
                         }
                         <td>
-                            <a class="btn btn-sm btn-secondary"
-                               asp-page="/Values/ValueEdit"
-                               asp-route-tableId="@Model.Table.Id"
-                               asp-route-objectId="@obj.Key">
-                                Редактировать
-                            </a>
-                            <a class="btn btn-sm btn-danger"
-                               asp-page="/Values/ValueDelete"
-                               asp-route-tableId="@Model.Table.Id"
-                               asp-route-objectId="@obj.Key"
-                               onclick="return confirm('Удалить эту запись?')">
-                                Удалить
-                            </a>
+                            <a class="btn btn-sm btn-secondary" asp-page="/Values/ValueEdit" asp-route-tableId="@Model.Table.Id" asp-route-objectId="@obj.Key">Редактировать</a>
+                            <a class="btn btn-sm btn-danger" asp-page="/Values/ValueDelete" asp-route-tableId="@Model.Table.Id" asp-route-objectId="@obj.Key" onclick="return confirm('Удалить эту запись?')">Удалить</a>
                         </td>
                     </tr>
                 }
@@ -109,26 +101,32 @@
     }
     else
     {
-        <p>Записей пока нет.</p>
+         <p>Записей пока нет.</p>
     }
 }
 else
 {
-    <p>
-        В таблице пока нет полей.
-        <a asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">Создать поля</a>.
-    </p>
+    <p>В таблице пока нет полей. <a asp-page="/Fields/FieldEdit" asp-route-tableId="@Model.Table.Id">Создать поля</a>.</p>
 }
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.key-field').forEach(select => {
-            select.addEventListener('change', function() {
-                updateKeyFieldOptions();
+        // Превью изображений перед загрузкой
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    let img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxHeight = '70px';
+                    img.style.marginTop = '5px';
+                    img.style.borderRadius = '4px';
+                    this.parentNode.appendChild(img);
+                };
+                reader.readAsDataURL(file);
             });
         });
-
-        function updateKeyFieldOptions() {
-        }
     </script>
 }

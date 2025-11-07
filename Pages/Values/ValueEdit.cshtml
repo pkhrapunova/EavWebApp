@@ -11,33 +11,68 @@
     <div class="card p-4 shadow-sm">
         <h5>Таблица: <b>@Model.TableInfo.Name</b></h5>
 
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="tableId" value="@Model.TableInfo.Id" />
+            <input type="hidden" name="objectId" value="@(Model.Values.FirstOrDefault()?.ObjectId)" />
+
             @for (int i = 0; i < Model.Fields.Count; i++)
             {
+                var field = Model.Fields[i];
+                var value = Model.Values.FirstOrDefault(v => v.FieldId == field.Id);
+
                 <div class="mb-3">
-                    <input type="hidden" asp-for="Values[i].Id" />
-                    <input type="hidden" asp-for="Values[i].FieldId" />
-                    <input type="hidden" asp-for="Values[i].TableId" />
-                    <input type="hidden" asp-for="Values[i].ObjectId" />
+                    <input type="hidden" name="Values[@i].FieldId" value="@field.Id" />
+                    <input type="hidden" name="Values[@i].Id" value="@value?.Id" />
+                    <input type="hidden" name="Values[@i].TableId" value="@Model.TableInfo.Id" />
+                    <input type="hidden" name="Values[@i].ObjectId" value="@value?.ObjectId" />
 
-                    <label class="form-label fw-bold">@Model.Fields[i].Name</label>
+                    <label class="form-label fw-bold">@field.Name</label>
 
-                    @if (Model.Fields[i].FieldType == "key" && Model.KeyOptions.ContainsKey(Model.Fields[i].Id))
+                    @if (field.FieldType == "key" && Model.KeyOptions.ContainsKey(field.Id))
                     {
-                        <select asp-for="Values[i].Val" class="form-control">
+                        <select name="Values[@i].Val" class="form-control">
                             <option value="">Выберите...</option>
-                            @foreach (var option in Model.KeyOptions[Model.Fields[i].Id])
+                            @foreach (var option in Model.KeyOptions[field.Id])
                             {
-                                <option value="@option.Key">@option.Value</option>
+                                <option value="@option.Key" selected="@(value?.Val == option.Key.ToString())">
+                                    @option.Value
+                                </option>
                             }
                         </select>
                     }
+                    else if (field.FieldType == "image")
+                    {
+                        <div>
+                            <input type="file" name="ImageFiles[@field.Id]" accept="image/*" class="form-control" />
+                            <small class="form-text text-muted">Выберите новое изображение</small>
+
+                            @if (value?.BinaryValue != null && value.BinaryValue.Length > 0)
+                            {
+                                <div class="mt-2">
+                                    <label>Текущее изображение:</label>
+                                    <div class="avatar-container">
+                                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(value.BinaryValue)"
+                                             class="avatar-image-large"
+                                             alt="@field.Name" />
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mt-2">
+                                    <div class="avatar-container">
+                                        <div class="avatar-placeholder-large">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                     else
                     {
-                        <input asp-for="Values[i].Val" class="form-control" />
+                        <input type="text" name="Values[@i].Val" value="@value?.Val" class="form-control" />
                     }
-
-                    <span asp-validation-for="Values[i].Val" class="text-danger"></span>
                 </div>
             }
 
@@ -53,6 +88,61 @@ else
     <div class="alert alert-warning">Данные не найдены.</div>
 }
 
+<style>
+    .avatar-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    .avatar-image-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #007bff;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .avatar-placeholder-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: 3px dashed #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 36px;
+    }
+</style>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Превью изображений в виде круга при редактировании
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = e => {
+                    // Удаляем старое превью если есть
+                    const oldPreview = this.parentNode.querySelector('.new-avatar-preview');
+                    if (oldPreview) oldPreview.remove();
+
+                    // Создаем новое превью в виде круга
+                    let img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'new-avatar-preview avatar-image-large';
+                    img.style.borderColor = '#28a745';
+
+                    this.parentNode.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
 }

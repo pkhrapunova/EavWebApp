@@ -1,5 +1,5 @@
 ﻿@page "{id:int}"
-@model EavWebApp.Pages.Tables.EditModel
+@model EavWebApp.Pages.Tables.TableEditModel
 @{
     ViewData["Title"] = "Редактировать таблицу";
 }
@@ -69,19 +69,27 @@
                                 @if (field.FieldType == "key" && int.TryParse(val, out int keyId))
                                 {
                                     @(Model.KeyReferences.ContainsKey(field.Id) && Model.KeyReferences[field.Id].ContainsKey(keyId)
-                                        ? Model.KeyReferences[field.Id][keyId]
-                                        : $"ID {keyId}")
+                                                    ? Model.KeyReferences[field.Id][keyId]
+                                                    : $"ID {keyId}")
                                 }
                                 else if (field.FieldType == "image")
                                 {
                                     var bytes = obj.Value.FirstOrDefault(v => v.FieldId == field.Id)?.BinaryValue;
-                                    if (bytes != null)
+                                    if (bytes != null && bytes.Length > 0)
                                     {
-                                        <img src="data:image/png;base64,@Convert.ToBase64String(bytes)" style="max-height:70px; border-radius:4px;" />
+                                        <div class="avatar-container">
+                                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(bytes)"
+                                                 class="avatar-image"
+                                                 alt="@field.Name" />
+                                        </div>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">Нет изображения</span>
+                                        <div class="avatar-container">
+                                            <div class="avatar-placeholder">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        </div>
                                     }
                                 }
                                 else
@@ -101,7 +109,7 @@
     }
     else
     {
-         <p>Записей пока нет.</p>
+        <p>Записей пока нет.</p>
     }
 }
 else
@@ -118,15 +126,75 @@ else
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = e => {
+                    // Удаляем старое превью если есть
+                    const oldPreview = this.parentNode.querySelector('.image-preview');
+                    if (oldPreview) oldPreview.remove();
+
+                    // Создаем новое превью в виде круга
                     let img = document.createElement('img');
                     img.src = e.target.result;
-                    img.style.maxHeight = '70px';
+                    img.className = 'image-preview';
+                    img.style.width = '70px';
+                    img.style.height = '70px';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
                     img.style.marginTop = '5px';
-                    img.style.borderRadius = '4px';
+                    img.style.border = '2px solid #007bff';
+
                     this.parentNode.appendChild(img);
                 };
                 reader.readAsDataURL(file);
             });
         });
     </script>
+
+    <style>
+        .avatar-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .avatar-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+            .avatar-image:hover {
+                border-color: #007bff;
+                transform: scale(1.05);
+            }
+
+        .avatar-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 24px;
+        }
+
+        /* Для выравнивания аватарки по центру ячейки таблицы */
+        table td {
+            vertical-align: middle !important;
+        }
+
+        /* Стили для превью при загрузке */
+        .image-preview {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #007bff;
+            margin-top: 5px;
+        }
+    </style>
 }
